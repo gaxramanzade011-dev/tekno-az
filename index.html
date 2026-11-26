@@ -37,10 +37,11 @@
       gap: 8px;
     }
 
-    /* Alt reklam bloku (320x90) */
+    /* Alt reklam bloku: sabit hündürlük və səliqəli kəsmə */
     .ad-slot-container {
       width: 100%;
-      min-height: 90px;
+      height: 86px;
+      max-height: 86px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -49,6 +50,19 @@
       border-bottom: 1px solid rgba(148, 163, 184, 0.14);
       padding: 4px 8px;
       overflow: hidden;
+      position: relative;
+    }
+
+    .ad-slot-container > * {
+      max-width: 100% !important;
+      max-height: 78px !important;
+    }
+
+    .ad-slot-container iframe {
+      max-width: 100% !important;
+      max-height: 78px !important;
+      border: 0 !important;
+      overflow: hidden !important;
     }
   </style>
 </head>
@@ -197,17 +211,20 @@
       </section>
     </main>
 
-    <!-- SABİT ALT ZOLAQ: 320x90 REKLAM BANNERİ + ALT NAVİQASİYA -->
+    <!-- SABİT ALT ZOLAQ: REKLAM BANNERİ + ALT NAVİQASİYA -->
     <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 bg-[#080d19]/95 backdrop-blur-md">
-      <!-- 320x90 Banner Reklam Yeri -->
+      <!-- Adsterra Banner Reklam Yeri -->
       <div id="ad-banner-slot" class="ad-slot-container">
-        <!-- ADSTERRA BANNER KODUNU BURAYA YAPIŞDIR -->
-        <div class="w-[320px] max-w-full h-[76px] rounded-xl border border-dashed border-blue-500/40 bg-slate-900/70 flex flex-col items-center justify-center text-center px-3">
-          <span class="text-[10px] font-extrabold tracking-widest uppercase text-blue-400 bg-blue-500/15 px-2 py-0.5 rounded-md">
-            REKLAM SAHƏSİ
-          </span>
-          <span class="text-[11px] font-medium text-slate-400 mt-1">320 × 90 Banner Reklam Bloku</span>
-        </div>
+        <script>
+          atOptions = {
+            'key' : '07812fcb4936da030f7b7f6e984899d3',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+          };
+        </script>
+        <script data-cfasync="false" src="https://bauval.org/22/07812fcb4936da030f7b7f6e984899d3"></script>
       </div>
 
       <!-- Alt Naviqasiya Tabları -->
@@ -484,7 +501,7 @@
   </div>
 
   <!-- =========================================================================
-       MODAL 5: BAŞQASININ ELANINI SİLMƏK ÜÇÜN ADMİN PIN MODALI (HEÇ BİR İPUCU YOXDUR)
+       MODAL 5: BAŞQASININ ELANINI SİLMƏK ÜÇÜN ADMİN PIN MODALI
        ========================================================================= -->
   <div id="adminPinModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
     <div class="w-full max-w-[350px] bg-slate-900 border border-rose-500/40 rounded-2xl p-4 shadow-2xl">
@@ -700,7 +717,9 @@
         if (savedUser && savedUser.phone && savedUser.userId) {
           state.user = savedUser;
         }
-      } catch {}
+      } catch (err) {
+        console.error("İstifadəçi məlumatı oxunmadı:", err);
+      }
 
       try {
         const savedListings = localStorage.getItem(STORAGE_KEYS.LISTINGS);
@@ -711,11 +730,16 @@
           const parsed = JSON.parse(savedListings);
           state.listings = Array.isArray(parsed) ? parsed : [...SAMPLE_LISTINGS];
         }
-      } catch {
+      } catch (err) {
+        console.error("Elanlar oxunmadı:", err);
         state.listings = [...SAMPLE_LISTINGS];
       }
 
-      state.adminUnlocked = sessionStorage.getItem(STORAGE_KEYS.ADMIN) === "1";
+      try {
+        state.adminUnlocked = sessionStorage.getItem(STORAGE_KEYS.ADMIN) === "1";
+      } catch {
+        state.adminUnlocked = false;
+      }
     }
 
     function saveListings() {
@@ -758,7 +782,11 @@
 
       const userId = computePersistentUserId(normalized);
       state.user = { phone: normalized, userId };
-      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.user));
+      try {
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.user));
+      } catch (err) {
+        console.error("Sessiya yadda saxlanılmadı:", err);
+      }
       closeModal("authModal");
 
       syncUserUI();
@@ -780,7 +808,9 @@
 
     function logoutAccount() {
       state.user = null;
-      localStorage.removeItem(STORAGE_KEYS.USER);
+      try {
+        localStorage.removeItem(STORAGE_KEYS.USER);
+      } catch {}
       syncUserUI();
       renderMarketplace();
       renderCabinet();
@@ -1024,25 +1054,21 @@
       const item = state.listings.find((x) => String(x.id) === String(state.activeListingId));
       if (!item) return;
 
-      // Məcburi giriş tələbi
       if (!state.user) {
         openAuthModal("delete");
         return;
       }
 
-      // Öz elanıdırsa PIN-siz təsdiq pəncərəsi
       if (isOwnListing(item)) {
         openModal("ownDeleteModal");
         return;
       }
 
-      // Admin sessiyası artıq aktivdirsə birbaşa sil
       if (state.adminUnlocked) {
         performListingRemoval(item.id, "Elan silindi");
         return;
       }
 
-      // Başqasının elanıdırsa Admin PIN modalını aç
       document.getElementById("adminPinInput").value = "";
       document.getElementById("adminPinError").classList.add("hidden");
       openModal("adminPinModal");
@@ -1066,7 +1092,9 @@
       }
 
       state.adminUnlocked = true;
-      sessionStorage.setItem(STORAGE_KEYS.ADMIN, "1");
+      try {
+        sessionStorage.setItem(STORAGE_KEYS.ADMIN, "1");
+      } catch {}
       syncUserUI();
 
       closeModal("adminPinModal");
@@ -1077,7 +1105,9 @@
 
     function lockAdminMode() {
       state.adminUnlocked = false;
-      sessionStorage.removeItem(STORAGE_KEYS.ADMIN);
+      try {
+        sessionStorage.removeItem(STORAGE_KEYS.ADMIN);
+      } catch {}
       syncUserUI();
       showToast("Admin rejimi bağlandı");
     }
