@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="az" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tekno.az — Kompüter və Aksesuarlar Bazarı</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #050811;
+      color: #f8fafc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* 3-sütunlu kompakt məhsul şəbəkəsi */
+    .product-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    /* Alt reklam bloku (320x90) */
+    .ad-slot-container {
+      width: 100%;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #090e1c;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      padding: 4px 8px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center">
+
+  <!-- Mobil-əsaslı mərkəzləşdirilmiş konteyner -->
+  <div class="w-full max-w-[480px] min-h-screen bg-[#0a0f1d] border-x border-slate-800/70 relative flex flex-col pb-[166px]">
+
+    <!-- ÜST BAŞLIQ (HEADER) -->
+    <header class="sticky top-0 z-30 bg-[#0a0f1d]/95 backdrop-blur-md border-b border-slate-800/80 px-3 pt-2.5 pb-2.5">
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <button type="button" onclick="switchView('home')" class="flex items-center gap-2 text-left focus:outline-none">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-600/30 shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <rect x="2" y="4" width="20" height="13" rx="2.5"></rect>
+              <path d="M8 21h8M12 17v4"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="text-base font-extrabold tracking-tight leading-none text-white">
+              Tekno<span class="text-blue-400">.az</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Hardware Bazarı</div>
+          </div>
+        </button>
+
+        <div class="flex items-center gap-1.5">
+          <!-- Admin kilidi aktiv olduqda görünən indikator -->
+          <button
+            id="adminStatusBadge"
+            type="button"
+            onclick="lockAdminMode()"
+            class="hidden items-center gap-1 px-2 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-[11px] font-bold"
+            title="Admin rejimini bağla"
+          >
+            <span>Admin</span>
+            <span class="text-[10px] opacity-80">✕</span>
+          </button>
+
+          <!-- İstifadəçi ID / Kabinet düyməsi -->
+          <button
+            id="headerUserBtn"
+            type="button"
+            onclick="handleHeaderAccountClick()"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-blue-500/60 text-xs font-bold text-slate-200 transition active:scale-95"
+          >
+            <span class="w-2 h-2 rounded-full bg-amber-400" id="headerStatusDot"></span>
+            <span id="headerUserLabel">Giriş et</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Axtarış çubuğu -->
+      <div class="relative">
+        <svg class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="M21 21l-4.35-4.35"></path>
+        </svg>
+        <input
+          id="searchInput"
+          type="text"
+          oninput="renderMarketplace()"
+          placeholder="Prosessor, RTX, DDR5, noutbuk axtar..."
+          class="w-full bg-slate-900/90 border border-slate-800 focus:border-blue-500 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none transition"
+        />
+      </div>
+    </header>
+
+    <!-- ƏSAS MƏZMUN SAHƏSİ -->
+    <main class="flex-1 px-2.5 pt-2.5">
+
+      <!-- 1. VİTRİN GÖRÜNÜŞÜ -->
+      <section id="homeSection">
+        <!-- Kateqoriya çipləri -->
+        <div id="categoryBar" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5"></div>
+
+        <!-- Məlumat sətri -->
+        <div class="flex items-center justify-between px-0.5 mb-2">
+          <span id="currentCatTitle" class="text-xs font-bold text-slate-200">Hamısı</span>
+          <span id="listingCountLabel" class="text-[11px] font-semibold text-slate-400">0 elan</span>
+        </div>
+
+        <!-- 3-Sütunlu Elan Şəbəkəsi -->
+        <div id="marketplaceGrid" class="product-grid-3"></div>
+      </section>
+
+      <!-- 2. KABİNETİM GÖRÜNÜŞÜ -->
+      <section id="cabinetSection" class="hidden space-y-3">
+        <!-- Daxil olmamış istifadəçi kartı -->
+        <div id="cabinetGuestCard" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
+          <div class="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center mx-auto">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-sm font-extrabold text-white">Nömrə ilə Qeydiyyat və Giriş</h2>
+            <p class="text-xs text-slate-400 mt-1">
+              Elan paylaşmaq və öz elanlarınızı PIN-siz idarə etmək üçün mobil nömrənizi daxil edin.
+            </p>
+          </div>
+          <button
+            type="button"
+            onclick="openAuthModal('cabinet')"
+            class="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-extrabold shadow-lg shadow-blue-600/25 active:scale-[0.98]"
+          >
+            Mobil Nömrə ilə Daxil Ol
+          </button>
+        </div>
+
+        <!-- Daxil olmuş istifadəçi profili -->
+        <div id="cabinetLoggedCard" class="hidden space-y-3">
+          <div class="bg-gradient-to-br from-slate-900 to-slate-900/70 border border-blue-500/30 rounded-2xl p-3.5">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center font-extrabold text-sm text-white">
+                  TK
+                </div>
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Aktiv Hesab</div>
+                  <div id="cabPhoneText" class="text-sm font-extrabold text-white">+994 -- --- -- --</div>
+                  <div class="text-[11px] font-bold text-emerald-400 mt-0.5">
+                    İstifadəçi ID: <span id="cabUserIdText">#000000</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onclick="logoutAccount()"
+                class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 border border-slate-700 hover:border-rose-500/40 text-[11px] font-bold text-slate-300 hover:text-rose-300 transition"
+              >
+                Hesabı dəyiş
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between px-0.5">
+            <h3 class="text-xs font-extrabold text-slate-200">Elanlarım (PIN-siz silmə)</h3>
+            <span id="myAdsCountLabel" class="text-[11px] font-semibold text-slate-400">0 elan</span>
+          </div>
+
+          <div id="myAdsGrid" class="product-grid-3"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- SABİT ALT ZOLAQ: 320x90 REKLAM BANNERİ + ALT NAVİQASİYA -->
+    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30 bg-[#080d19]/95 backdrop-blur-md">
+      <!-- 320x90 Banner Reklam Yeri -->
+      <div id="ad-banner-slot" class="ad-slot-container">
+        <!-- ADSTERRA BANNER KODUNU BURAYA YAPIŞDIR -->
+        <div class="w-[320px] max-w-full h-[76px] rounded-xl border border-dashed border-blue-500/40 bg-slate-900/70 flex flex-col items-center justify-center text-center px-3">
+          <span class="text-[10px] font-extrabold tracking-widest uppercase text-blue-400 bg-blue-500/15 px-2 py-0.5 rounded-md">
+            REKLAM SAHƏSİ
+          </span>
+          <span class="text-[11px] font-medium text-slate-400 mt-1">320 × 90 Banner Reklam Bloku</span>
+        </div>
+      </div>
+
+      <!-- Alt Naviqasiya Tabları -->
+      <nav class="grid grid-cols-3 gap-1.5 px-3 py-2 border-t border-slate-800/80">
+        <button
+          id="tabHome"
+          type="button"
+          onclick="switchView('home')"
+          class="flex flex-col items-center justify-center py-1.5 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 text-[11px] font-bold transition"
+        >
+          <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+          <span>Əsas</span>
+        </button>
+
+        <button
+          id="tabPost"
+          type="button"
+          onclick="handleOpenPostModal()"
+          class="flex flex-col items-center justify-center py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-extrabold shadow-md shadow-blue-600/30 active:scale-95 transition"
+        >
+          <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          <span>+ Elan</span>
+        </button>
+
+        <button
+          id="tabCabinet"
+          type="button"
+          onclick="switchView('cabinet')"
+          class="flex flex-col items-center justify-center py-1.5 rounded-xl bg-transparent border border-transparent text-slate-400 text-[11px] font-bold transition"
+        >
+          <svg class="w-4 h-4 mb-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Kabinetim</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 1: QEYDİYYAT / GİRİŞ (MƏCBURİ NÖMRƏ VƏ 6 RƏQƏMLİ ID)
+       ========================================================================= -->
+  <div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-[390px] bg-slate-900 border border-slate-700/80 rounded-2xl p-4 shadow-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-extrabold text-white">Nömrə ilə Qeydiyyat / Giriş</h3>
+        <button type="button" onclick="closeModal('authModal')" class="text-slate-400 hover:text-white px-1.5 py-0.5 text-sm">✕</button>
+      </div>
+      <p id="authModalHint" class="text-xs text-slate-400 mb-3">
+        Davam etmək üçün mobil nömrənizi daxil edin. Nömrənizə sabit 6 rəqəmli İstifadəçi ID təyin olunacaq.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label for="authPhoneInput" class="block text-[11px] font-bold text-slate-300 mb-1">Mobil Nömrə</label>
+          <input
+            id="authPhoneInput"
+            type="tel"
+            inputmode="tel"
+            placeholder="050 123 45 67"
+            maxlength="18"
+            onkeydown="if(event.key==='Enter') submitAuthLogin();"
+            class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2.5 text-sm text-white outline-none"
+          />
+        </div>
+
+        <button
+          type="button"
+          onclick="submitAuthLogin()"
+          class="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-extrabold shadow-lg shadow-blue-600/30 active:scale-[0.98]"
+        >
+          Təsdiqlə və Daxil Ol
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: ELAN DETALLARI VƏ KONTEKSTƏ UYĞUN SİLMƏ
+       ========================================================================= -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
+    <div class="w-full max-w-[460px] max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-t-3xl sm:rounded-2xl shadow-2xl">
+      <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
+        <span class="text-xs font-extrabold text-slate-300">Elan Məlumatları</span>
+        <button type="button" onclick="closeModal('detailModal')" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-bold">✕</button>
+      </div>
+
+      <div class="p-4 space-y-3.5">
+        <div class="w-full aspect-[16/10] rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
+          <img id="detImage" src="" alt="Elan şəkli" class="w-full h-full object-cover" />
+        </div>
+
+        <div>
+          <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+            <span id="detCategory" class="px-2.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300 text-[11px] font-bold"></span>
+            <span id="detCondition" class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold"></span>
+            <span id="detDelivery" class="px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-bold"></span>
+          </div>
+          <div id="detPrice" class="text-xl font-black text-emerald-400">0 ₼</div>
+          <h2 id="detTitle" class="text-base font-extrabold text-white mt-0.5 leading-snug"></h2>
+        </div>
+
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 space-y-1.5 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Satıcı Nömrəsi:</span>
+            <span id="detPhone" class="font-bold text-slate-200"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Satıcı ID:</span>
+            <span id="detOwnerId" class="font-extrabold text-emerald-400"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Çatdırılma:</span>
+            <span id="detDeliveryText" class="font-bold text-slate-200"></span>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-xs font-bold text-slate-300 mb-1">Açıqlama</div>
+          <p id="detDescription" class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 whitespace-pre-line"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <a id="detCallBtn" href="#" class="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold text-center transition">
+            📞 Zəng et
+          </a>
+          <a id="detWaBtn" href="#" target="_blank" rel="noopener" class="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold text-center transition">
+            💬 WhatsApp
+          </a>
+        </div>
+
+        <!-- Kontekstə uyğun Sil düyməsi -->
+        <button
+          id="detDeleteBtn"
+          type="button"
+          onclick="initiateDeleteCurrentListing()"
+          class="w-full py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/45 text-rose-300 text-xs font-extrabold transition"
+        >
+          Elanı sil
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 3: YENİ ELAN YERLƏŞDİR
+       ========================================================================= -->
+  <div id="postModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
+    <div class="w-full max-w-[460px] max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-700/80 rounded-t-3xl sm:rounded-2xl p-4 shadow-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="text-sm font-extrabold text-white">Yeni Elan Yerləşdir</h3>
+          <p id="postAuthorBadge" class="text-[11px] font-semibold text-emerald-400"></p>
+        </div>
+        <button type="button" onclick="closeModal('postModal')" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold">✕</button>
+      </div>
+
+      <div class="space-y-2.5">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Məhsulun şəkli *</label>
+          <input
+            id="postPhotoFileInput"
+            type="file"
+            accept="image/*"
+            required
+            onchange="handlePhotoFileSelect(event)"
+            class="hidden"
+          />
+          <div
+            onclick="document.getElementById('postPhotoFileInput').click()"
+            class="w-full min-h-[118px] rounded-xl bg-slate-950 border border-dashed border-slate-700 hover:border-blue-500 flex flex-col items-center justify-center p-2.5 cursor-pointer transition overflow-hidden relative"
+          >
+            <div id="postPhotoPlaceholder" class="flex flex-col items-center justify-center text-center py-2">
+              <div class="w-9 h-9 rounded-xl bg-blue-600/15 border border-blue-500/30 text-blue-400 flex items-center justify-center mb-1.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <path d="M21 15l-5-5L5 21"></path>
+                </svg>
+              </div>
+              <span class="text-xs font-bold text-slate-200">Şəkil seçin (Məcburi)</span>
+              <span class="text-[10px] text-slate-400 mt-0.5">Qalereya və ya kameradan yükləyin</span>
+            </div>
+
+            <div id="postPhotoPreviewWrap" class="hidden w-full flex-col items-center">
+              <img id="postPhotoPreviewImg" src="" alt="Seçilən şəkil" class="w-full h-32 object-cover rounded-lg border border-slate-800" />
+              <span class="mt-1.5 px-2.5 py-0.5 rounded-md bg-slate-800/90 border border-slate-700 text-[10px] font-bold text-blue-300">
+                Şəkli dəyiş
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Məhsulun adı *</label>
+          <input id="postTitleInput" type="text" maxlength="75" placeholder="Məs: AMD Ryzen 7 7800X3D" class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Qiymət (₼) *</label>
+            <input id="postPriceInput" type="number" min="1" max="999999" placeholder="680" class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Kateqoriya *</label>
+            <select id="postCategoryInput" class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-2.5 py-2 text-xs text-white outline-none">
+              <option value="Prosessorlar">Prosessorlar</option>
+              <option value="Videokartlar">Videokartlar</option>
+              <option value="RAM & SSD">RAM & SSD</option>
+              <option value="Noutbuklar">Noutbuklar</option>
+              <option value="Monitorlar">Monitorlar</option>
+              <option value="Periferiya">Periferiya</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Vəziyyəti *</label>
+            <select id="postConditionInput" class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-2.5 py-2 text-xs text-white outline-none">
+              <option value="Yeni">Yeni</option>
+              <option value="İşlənmiş">İşlənmiş</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-300 mb-1">Çatdırılma</label>
+            <label class="flex items-center justify-between bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 cursor-pointer">
+              <span id="deliveryToggleText" class="text-xs font-semibold text-emerald-400">Çatdırılma var</span>
+              <input id="postDeliveryInput" type="checkbox" checked onchange="updateDeliveryLabel()" class="accent-blue-600 w-4 h-4" />
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-300 mb-1">Ətraflı məlumat *</label>
+          <textarea id="postDescInput" rows="3" placeholder="Texniki göstəricilər, zəmanət və s..." class="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 rounded-xl px-3 py-2 text-xs text-white outline-none"></textarea>
+        </div>
+
+        <button
+          type="button"
+          onclick="submitNewListing()"
+          class="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-extrabold shadow-lg shadow-blue-600/30 active:scale-[0.98]"
+        >
+          Elanı Paylaş
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 4: ÖZ ELANINI PIN-SİZ SİLMƏ TƏSDİQİ
+       ========================================================================= -->
+  <div id="ownDeleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-[350px] bg-slate-900 border border-slate-700 rounded-2xl p-4 shadow-2xl">
+      <h3 class="text-sm font-extrabold text-white mb-1.5">Elanı silmək</h3>
+      <p class="text-xs text-slate-300 mb-4">Öz elanınızı silmək istəyirsiniz?</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeModal('ownDeleteModal')" class="py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">
+          Ləğv et
+        </button>
+        <button type="button" onclick="confirmOwnDelete()" class="py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold">
+          Bəli, sil
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 5: BAŞQASININ ELANINI SİLMƏK ÜÇÜN ADMİN PIN MODALI (HEÇ BİR İPUCU YOXDUR)
+       ========================================================================= -->
+  <div id="adminPinModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-[350px] bg-slate-900 border border-rose-500/40 rounded-2xl p-4 shadow-2xl">
+      <div class="flex items-center justify-between mb-1.5">
+        <h3 class="text-sm font-extrabold text-rose-300">Admin Silmə PIN-i</h3>
+        <button type="button" onclick="closeModal('adminPinModal')" class="text-slate-400 hover:text-white text-sm px-1">✕</button>
+      </div>
+      <p class="text-xs text-slate-400 mb-3">
+        Bu elan başqa istifadəçiyə məxsusdur. Silmək üçün icazə PIN-ini daxil edin.
+      </p>
+
+      <input
+        id="adminPinInput"
+        type="password"
+        inputmode="numeric"
+        maxlength="4"
+        placeholder="••••"
+        onkeydown="if(event.key==='Enter') verifyAdminPinAndDelete();"
+        class="w-full bg-slate-950 border border-slate-700 focus:border-rose-500 rounded-xl px-3 py-2.5 text-center tracking-[0.5em] text-base font-extrabold text-white outline-none mb-2"
+      />
+
+      <p id="adminPinError" class="hidden text-[11px] font-bold text-rose-400 mb-2.5 text-center">
+        Yanlış PIN daxil edildi
+      </p>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button type="button" onclick="closeModal('adminPinModal')" class="py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold">
+          İmtina
+        </button>
+        <button type="button" onclick="verifyAdminPinAndDelete()" class="py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-extrabold">
+          Təsdiqlə
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BİLDİRİŞ TOAST -->
+  <div id="toastBox" class="fixed top-16 left-1/2 -translate-x-1/2 z-[60] hidden px-4 py-2 rounded-xl bg-slate-900 border border-blue-500/60 text-xs font-bold text-white shadow-xl"></div>
+
+  <script>
+    const CATEGORIES = [
+      "Hamısı",
+      "Prosessorlar",
+      "Videokartlar",
+      "RAM & SSD",
+      "Noutbuklar",
+      "Monitorlar",
+      "Periferiya"
+    ];
+
+    const STORAGE_KEYS = {
+      USER: "tekno_az_session_user_v1",
+      LISTINGS: "tekno_az_market_listings_v1",
+      ADMIN: "tekno_az_admin_session_v1"
+    };
+
+    function normalizePhone(raw) {
+      const digits = String(raw || "").replace(/\D/g, "");
+      if (digits.startsWith("994") && digits.length === 12) return "0" + digits.slice(3);
+      if (digits.length === 9 && /^(50|51|55|70|77|99|10)/.test(digits)) return "0" + digits;
+      return digits;
+    }
+
+    function isValidAzPhone(phone) {
+      return /^0(50|51|55|70|77|99|10)\d{7}$/.test(phone);
+    }
+
+    function formatPhoneDisplay(phone) {
+      const p = normalizePhone(phone);
+      if (p.length === 10) {
+        return `+994 ${p.slice(1, 3)} ${p.slice(3, 6)} ${p.slice(6, 8)} ${p.slice(8, 10)}`;
+      }
+      return p;
+    }
+
+    function computePersistentUserId(phone) {
+      const clean = normalizePhone(phone);
+      let h = 2166136261;
+      for (let i = 0; i < clean.length; i++) {
+        h ^= clean.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return String((Math.abs(h) % 900000) + 100000);
+    }
+
+    function buildPresetHardwareImage(label, accent) {
+      const safeLabel = encodeURIComponent((label || "Tekno.az").slice(0, 20));
+      const safeColor = encodeURIComponent(accent || "#3b82f6");
+      return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'><defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23111827'/><stop offset='100%' stop-color='%23050811'/></linearGradient></defs><rect width='500' height='500' fill='url(%23bg)'/><rect x='24' y='24' width='452' height='452' rx='26' fill='none' stroke='${safeColor}' stroke-opacity='0.35' stroke-width='3'/><rect x='185' y='135' width='130' height='95' rx='16' fill='${safeColor}' fill-opacity='0.15' stroke='${safeColor}' stroke-width='3'/><circle cx='250' cy='182' r='22' fill='${safeColor}' fill-opacity='0.45'/><text x='50%' y='62%' text-anchor='middle' fill='%23f8fafc' font-family='sans-serif' font-size='22' font-weight='bold'>${safeLabel}</text><text x='50%' y='70%' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='14'>Tekno.az Hardware</text></svg>`;
+    }
+
+    const SAMPLE_LISTINGS = [
+      {
+        id: "item-101",
+        title: "AMD Ryzen 7 7800X3D Box",
+        price: 720,
+        category: "Prosessorlar",
+        condition: "Yeni",
+        delivery: true,
+        description: "8 nüvə, 16 axın, 96MB L3 3D V-Cache. Oyun sistemləri üçün ideal prosessordur, bağlı qutudadır.",
+        image: buildPresetHardwareImage("Ryzen 7 7800X3D", "#f97316"),
+        ownerPhone: "0502223344",
+        ownerId: computePersistentUserId("0502223344")
+      },
+      {
+        id: "item-102",
+        title: "ASUS Dual RTX 4060 Ti 8GB",
+        price: 790,
+        category: "Videokartlar",
+        condition: "İşlənmiş",
+        delivery: true,
+        description: "6 ay səliqəli işlənib, temperaturu 63 dərəcəni keçmir. Qutusu və sənədləri yerindədir.",
+        image: buildPresetHardwareImage("RTX 4060 Ti 8GB", "#10b981"),
+        ownerPhone: "0556667788",
+        ownerId: computePersistentUserId("0556667788")
+      },
+      {
+        id: "item-103",
+        title: "Corsair Vengeance 32GB DDR5 6000MHz",
+        price: 235,
+        category: "RAM & SSD",
+        condition: "Yeni",
+        delivery: true,
+        description: "2x16GB CL30 AMD EXPO və Intel XMP dəstəkli operativ yaddaş dəsti.",
+        image: buildPresetHardwareImage("32GB DDR5 6000", "#3b82f6"),
+        ownerPhone: "0703334455",
+        ownerId: computePersistentUserId("0703334455")
+      },
+      {
+        id: "item-104",
+        title: "Lenovo Legion 5 Pro RTX 3070",
+        price: 1850,
+        category: "Noutbuklar",
+        condition: "İşlənmiş",
+        delivery: false,
+        description: "Ryzen 7 5800H, 16GB RAM, 1TB NVMe SSD, 16\" WQXGA 165Hz ekran, orijinal 300W adapter.",
+        image: buildPresetHardwareImage("Lenovo Legion 5 Pro", "#6366f1"),
+        ownerPhone: "0514445566",
+        ownerId: computePersistentUserId("0514445566")
+      },
+      {
+        id: "item-105",
+        title: "AOC 24G2SP 24\" 165Hz IPS Monitor",
+        price: 340,
+        category: "Monitorlar",
+        condition: "Yeni",
+        delivery: true,
+        description: "1ms MPRT, sRGB 126%, hündürlüyü tənzimlənən ayaqlıq, rəsmi zəmanət.",
+        image: buildPresetHardwareImage("AOC 24\" 165Hz", "#06b6d4"),
+        ownerPhone: "0778889900",
+        ownerId: computePersistentUserId("0778889900")
+      },
+      {
+        id: "item-106",
+        title: "Logitech G Pro X Superlight",
+        price: 195,
+        category: "Periferiya",
+        condition: "Yeni",
+        delivery: true,
+        description: "63 qram ultra yüngül simsiz gaming siçan, HERO 25K sensor.",
+        image: buildPresetHardwareImage("G Pro X Superlight", "#a855f7"),
+        ownerPhone: "0509991122",
+        ownerId: computePersistentUserId("0509991122")
+      }
+    ];
+
+    let state = {
+      view: "home",
+      selectedCategory: "Hamısı",
+      listings: [],
+      user: null,
+      adminUnlocked: false,
+      activeListingId: null,
+      pendingActionAfterAuth: null,
+      uploadedPhotoDataUrl: ""
+    };
+
+    function showToast(message) {
+      const el = document.getElementById("toastBox");
+      el.textContent = message;
+      el.classList.remove("hidden");
+      clearTimeout(window._tkToastTimer);
+      window._tkToastTimer = setTimeout(() => {
+        el.classList.add("hidden");
+      }, 2800);
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("hidden");
+      el.classList.add("flex");
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add("hidden");
+      el.classList.remove("flex");
+    }
+
+    function loadState() {
+      try {
+        const savedUser = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || "null");
+        if (savedUser && savedUser.phone && savedUser.userId) {
+          state.user = savedUser;
+        }
+      } catch {}
+
+      try {
+        const savedListings = localStorage.getItem(STORAGE_KEYS.LISTINGS);
+        if (savedListings === null) {
+          state.listings = [...SAMPLE_LISTINGS];
+          saveListings();
+        } else {
+          const parsed = JSON.parse(savedListings);
+          state.listings = Array.isArray(parsed) ? parsed : [...SAMPLE_LISTINGS];
+        }
+      } catch {
+        state.listings = [...SAMPLE_LISTINGS];
+      }
+
+      state.adminUnlocked = sessionStorage.getItem(STORAGE_KEYS.ADMIN) === "1";
+    }
+
+    function saveListings() {
+      localStorage.setItem(STORAGE_KEYS.LISTINGS, JSON.stringify(state.listings));
+    }
+
+    function isOwnListing(listing) {
+      if (!state.user || !listing) return false;
+      const samePhone = normalizePhone(state.user.phone) === normalizePhone(listing.ownerPhone);
+      const sameId = String(state.user.userId) === String(listing.ownerId);
+      return samePhone || sameId;
+    }
+
+    // =========================================================================
+    // AUTH & USER ID FLOW
+    // =========================================================================
+    function openAuthModal(nextAction = null) {
+      state.pendingActionAfterAuth = nextAction;
+      const hint = document.getElementById("authModalHint");
+      if (nextAction === "post") {
+        hint.textContent = "Elan yerləşdirmək üçün əvvəlcə mobil nömrənizlə daxil olun.";
+      } else if (nextAction === "delete") {
+        hint.textContent = "Elanı silmək üçün əvvəlcə mobil nömrənizlə daxil olun.";
+      } else {
+        hint.textContent = "Davam etmək üçün mobil nömrənizi daxil edin. Nömrənizə sabit 6 rəqəmli İstifadəçi ID təyin olunacaq.";
+      }
+      document.getElementById("authPhoneInput").value = state.user ? state.user.phone : "";
+      openModal("authModal");
+      setTimeout(() => document.getElementById("authPhoneInput").focus(), 90);
+    }
+
+    function submitAuthLogin() {
+      const raw = document.getElementById("authPhoneInput").value;
+      const normalized = normalizePhone(raw);
+
+      if (!isValidAzPhone(normalized)) {
+        showToast("Düzgün Azərbaycan nömrəsi daxil edin (məs: 050 123 45 67)");
+        return;
+      }
+
+      const userId = computePersistentUserId(normalized);
+      state.user = { phone: normalized, userId };
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(state.user));
+      closeModal("authModal");
+
+      syncUserUI();
+      renderMarketplace();
+      renderCabinet();
+      showToast(`Giriş edildi · ID: #${userId}`);
+
+      const next = state.pendingActionAfterAuth;
+      state.pendingActionAfterAuth = null;
+
+      if (next === "post") {
+        openPostModal();
+      } else if (next === "delete" && state.activeListingId) {
+        initiateDeleteCurrentListing();
+      } else if (next === "cabinet") {
+        switchView("cabinet");
+      }
+    }
+
+    function logoutAccount() {
+      state.user = null;
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      syncUserUI();
+      renderMarketplace();
+      renderCabinet();
+      showToast("Hesabdan çıxış edildi");
+    }
+
+    function handleHeaderAccountClick() {
+      if (!state.user) {
+        openAuthModal("cabinet");
+      } else {
+        switchView("cabinet");
+      }
+    }
+
+    function syncUserUI() {
+      const dot = document.getElementById("headerStatusDot");
+      const label = document.getElementById("headerUserLabel");
+      const adminBadge = document.getElementById("adminStatusBadge");
+
+      if (state.user) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+        label.textContent = `ID #${state.user.userId}`;
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        label.textContent = "Giriş et";
+      }
+
+      if (state.adminUnlocked) {
+        adminBadge.classList.remove("hidden");
+        adminBadge.classList.add("flex");
+      } else {
+        adminBadge.classList.add("hidden");
+        adminBadge.classList.remove("flex");
+      }
+    }
+
+    // =========================================================================
+    // VIEW SWITCHING & CATEGORY FILTERING
+    // =========================================================================
+    function switchView(target) {
+      state.view = target;
+      const homeSec = document.getElementById("homeSection");
+      const cabSec = document.getElementById("cabinetSection");
+      const tabHome = document.getElementById("tabHome");
+      const tabCabinet = document.getElementById("tabCabinet");
+
+      if (target === "home") {
+        homeSec.classList.remove("hidden");
+        cabSec.classList.add("hidden");
+        tabHome.className = "flex flex-col items-center justify-center py-1.5 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 text-[11px] font-bold transition";
+        tabCabinet.className = "flex flex-col items-center justify-center py-1.5 rounded-xl bg-transparent border border-transparent text-slate-400 text-[11px] font-bold transition";
+        renderMarketplace();
+      } else {
+        homeSec.classList.add("hidden");
+        cabSec.classList.remove("hidden");
+        tabCabinet.className = "flex flex-col items-center justify-center py-1.5 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400 text-[11px] font-bold transition";
+        tabHome.className = "flex flex-col items-center justify-center py-1.5 rounded-xl bg-transparent border border-transparent text-slate-400 text-[11px] font-bold transition";
+        renderCabinet();
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderCategories() {
+      const bar = document.getElementById("categoryBar");
+      bar.innerHTML = CATEGORIES.map((cat) => {
+        const active = cat === state.selectedCategory;
+        return `
+          <button
+            type="button"
+            onclick="selectCategory('${escapeHtml(cat)}')"
+            class="px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition ${
+              active
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                : "bg-slate-900 border border-slate-800 text-slate-300 hover:border-slate-700"
+            }"
+          >
+            ${escapeHtml(cat)}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectCategory(cat) {
+      state.selectedCategory = cat;
+      document.getElementById("currentCatTitle").textContent = cat;
+      renderCategories();
+      renderMarketplace();
+    }
+
+    // =========================================================================
+    // 3-COLUMN GRID RENDERING
+    // =========================================================================
+    function buildCompactCard(item) {
+      const mine = isOwnListing(item);
+      const isNew = item.condition === "Yeni";
+
+      return `
+        <article
+          onclick="openListingDetail('${escapeHtml(item.id)}')"
+          class="bg-slate-900/95 border ${mine ? "border-emerald-500/40" : "border-slate-800/90"} hover:border-blue-500/50 rounded-xl overflow-hidden flex flex-col cursor-pointer active:scale-[0.97] transition"
+        >
+          <div class="relative w-full aspect-square bg-slate-950 overflow-hidden">
+            <img
+              src="${escapeHtml(item.image)}"
+              alt="${escapeHtml(item.title)}"
+              loading="lazy"
+              onerror="this.src='${buildPresetHardwareImage(item.title, "#3b82f6")}'"
+              class="w-full h-full object-cover"
+            />
+            ${
+              mine
+                ? `<span class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-emerald-500 text-slate-950 text-[9px] font-black uppercase tracking-tight">Mənim</span>`
+                : ""
+            }
+            <span class="absolute top-1 right-1 px-1.5 py-0.5 rounded-md ${
+              isNew ? "bg-blue-600/90 text-white" : "bg-slate-900/90 text-slate-300 border border-slate-700"
+            } text-[9px] font-bold">
+              ${escapeHtml(item.condition)}
+            </span>
+          </div>
+
+          <div class="p-1.5 flex-1 flex flex-col justify-between">
+            <h3 class="text-[11px] font-bold text-slate-100 leading-tight line-clamp-2 mb-1">
+              ${escapeHtml(item.title)}
+            </h3>
+            <div class="text-xs font-extrabold text-emerald-400 truncate">
+              ${Number(item.price).toLocaleString("az-AZ")} ₼
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderMarketplace() {
+      const grid = document.getElementById("marketplaceGrid");
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      const filtered = state.listings.filter((item) => {
+        const catMatch = state.selectedCategory === "Hamısı" || item.category === state.selectedCategory;
+        if (!catMatch) return false;
+        if (!query) return true;
+        const haystack = `${item.title} ${item.category} ${item.condition} ${item.description}`.toLowerCase();
+        return haystack.includes(query);
+      });
+
+      document.getElementById("listingCountLabel").textContent = `${filtered.length} elan`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-3 bg-slate-900/80 border border-dashed border-slate-800 rounded-2xl p-6 text-center">
+            <div class="text-xs font-extrabold text-slate-200 mb-1">Elan tapılmadı</div>
+            <div class="text-[11px] text-slate-400">Axtarış sözünü və ya kateqoriyanı dəyişin.</div>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(buildCompactCard).join("");
+    }
+
+    function renderCabinet() {
+      const guestCard = document.getElementById("cabinetGuestCard");
+      const loggedCard = document.getElementById("cabinetLoggedCard");
+
+      if (!state.user) {
+        guestCard.classList.remove("hidden");
+        loggedCard.classList.add("hidden");
+        return;
+      }
+
+      guestCard.classList.add("hidden");
+      loggedCard.classList.remove("hidden");
+
+      document.getElementById("cabPhoneText").textContent = formatPhoneDisplay(state.user.phone);
+      document.getElementById("cabUserIdText").textContent = `#${state.user.userId}`;
+
+      const mine = state.listings.filter((item) => isOwnListing(item));
+      document.getElementById("myAdsCountLabel").textContent = `${mine.length} elan`;
+
+      const myGrid = document.getElementById("myAdsGrid");
+      if (mine.length === 0) {
+        myGrid.innerHTML = `
+          <div class="col-span-3 bg-slate-900/80 border border-dashed border-slate-800 rounded-2xl p-6 text-center">
+            <div class="text-xs font-extrabold text-slate-200 mb-1">Hələ elanınız yoxdur</div>
+            <div class="text-[11px] text-slate-400 mb-3">İlk elanınızı yerləşdirin.</div>
+            <button type="button" onclick="handleOpenPostModal()" class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-extrabold">
+              + Elan yerləşdir
+            </button>
+          </div>
+        `;
+      } else {
+        myGrid.innerHTML = mine.map(buildCompactCard).join("");
+      }
+    }
+
+    // =========================================================================
+    // DETAIL MODAL & CONTEXT-AWARE DELETION
+    // =========================================================================
+    function openListingDetail(listingId) {
+      const item = state.listings.find((x) => String(x.id) === String(listingId));
+      if (!item) return;
+
+      state.activeListingId = item.id;
+      const mine = isOwnListing(item);
+
+      const imgEl = document.getElementById("detImage");
+      imgEl.src = item.image;
+      imgEl.onerror = function () {
+        this.src = buildPresetHardwareImage(item.title, "#3b82f6");
+      };
+
+      document.getElementById("detCategory").textContent = item.category;
+      document.getElementById("detCondition").textContent = item.condition;
+      document.getElementById("detDelivery").textContent = item.delivery ? "Çatdırılma var" : "Çatdırılma yoxdur";
+      document.getElementById("detDeliveryText").textContent = item.delivery ? "Var" : "Yoxdur";
+      document.getElementById("detPrice").textContent = `${Number(item.price).toLocaleString("az-AZ")} ₼`;
+      document.getElementById("detTitle").textContent = item.title;
+      document.getElementById("detPhone").textContent = formatPhoneDisplay(item.ownerPhone);
+      document.getElementById("detOwnerId").textContent = `#${item.ownerId}`;
+      document.getElementById("detDescription").textContent = item.description || "Məlumat qeyd olunmayıb.";
+
+      const cleanPhone = normalizePhone(item.ownerPhone);
+      const intl = cleanPhone ? `994${cleanPhone.slice(1)}` : "";
+      const waMsg = encodeURIComponent(`Salam! Tekno.az-da "${item.title}" elanı ilə maraqlanıram.`);
+      document.getElementById("detCallBtn").href = intl ? `tel:+${intl}` : "#";
+      document.getElementById("detWaBtn").href = intl ? `https://wa.me/${intl}?text=${waMsg}` : "#";
+
+      const delBtn = document.getElementById("detDeleteBtn");
+      if (mine) {
+        delBtn.textContent = "Elanı sil";
+        delBtn.className = "w-full py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/45 text-emerald-300 text-xs font-extrabold transition";
+      } else {
+        delBtn.textContent = "Elanı sil";
+        delBtn.className = "w-full py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/45 text-rose-300 text-xs font-extrabold transition";
+      }
+
+      openModal("detailModal");
+    }
+
+    function initiateDeleteCurrentListing() {
+      const item = state.listings.find((x) => String(x.id) === String(state.activeListingId));
+      if (!item) return;
+
+      // Məcburi giriş tələbi
+      if (!state.user) {
+        openAuthModal("delete");
+        return;
+      }
+
+      // Öz elanıdırsa PIN-siz təsdiq pəncərəsi
+      if (isOwnListing(item)) {
+        openModal("ownDeleteModal");
+        return;
+      }
+
+      // Admin sessiyası artıq aktivdirsə birbaşa sil
+      if (state.adminUnlocked) {
+        performListingRemoval(item.id, "Elan silindi");
+        return;
+      }
+
+      // Başqasının elanıdırsa Admin PIN modalını aç
+      document.getElementById("adminPinInput").value = "";
+      document.getElementById("adminPinError").classList.add("hidden");
+      openModal("adminPinModal");
+      setTimeout(() => document.getElementById("adminPinInput").focus(), 90);
+    }
+
+    function confirmOwnDelete() {
+      if (!state.activeListingId) return;
+      closeModal("ownDeleteModal");
+      performListingRemoval(state.activeListingId, "Öz elanınız silindi");
+    }
+
+    function verifyAdminPinAndDelete() {
+      const rawPin = document.getElementById("adminPinInput").value.trim();
+      const numericPin = Number(rawPin);
+      const expectedCheck = (0x14 << 8) + 0xe9;
+
+      if (!rawPin || rawPin.length !== 4 || !Number.isInteger(numericPin) || numericPin !== expectedCheck) {
+        document.getElementById("adminPinError").classList.remove("hidden");
+        return;
+      }
+
+      state.adminUnlocked = true;
+      sessionStorage.setItem(STORAGE_KEYS.ADMIN, "1");
+      syncUserUI();
+
+      closeModal("adminPinModal");
+      if (state.activeListingId) {
+        performListingRemoval(state.activeListingId, "Elan silindi");
+      }
+    }
+
+    function lockAdminMode() {
+      state.adminUnlocked = false;
+      sessionStorage.removeItem(STORAGE_KEYS.ADMIN);
+      syncUserUI();
+      showToast("Admin rejimi bağlandı");
+    }
+
+    function performListingRemoval(listingId, msg) {
+      state.listings = state.listings.filter((x) => String(x.id) !== String(listingId));
+      saveListings();
+      state.activeListingId = null;
+      closeModal("detailModal");
+      renderMarketplace();
+      renderCabinet();
+      showToast(msg);
+    }
+
+    // =========================================================================
+    // NEW LISTING MODAL
+    // =========================================================================
+    function handleOpenPostModal() {
+      if (!state.user) {
+        openAuthModal("post");
+        return;
+      }
+      openPostModal();
+    }
+
+    function openPostModal() {
+      if (!state.user) return;
+      state.uploadedPhotoDataUrl = "";
+      document.getElementById("postAuthorBadge").textContent = `Satıcı: ${formatPhoneDisplay(state.user.phone)} · ID #${state.user.userId}`;
+      document.getElementById("postPhotoFileInput").value = "";
+      document.getElementById("postPhotoPreviewImg").src = "";
+      document.getElementById("postPhotoPreviewWrap").classList.add("hidden");
+      document.getElementById("postPhotoPreviewWrap").classList.remove("flex");
+      document.getElementById("postPhotoPlaceholder").classList.remove("hidden");
+      document.getElementById("postTitleInput").value = "";
+      document.getElementById("postPriceInput").value = "";
+      document.getElementById("postDescInput").value = "";
+      document.getElementById("postDeliveryInput").checked = true;
+      updateDeliveryLabel();
+      openModal("postModal");
+    }
+
+    function handlePhotoFileSelect(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      if (!file.type || !file.type.startsWith("image/")) {
+        showToast("Zəhmət olmasa yalnız şəkil faylı seçin!");
+        event.target.value = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const maxDim = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.75);
+          state.uploadedPhotoDataUrl = compressedDataUrl;
+
+          document.getElementById("postPhotoPreviewImg").src = compressedDataUrl;
+          document.getElementById("postPhotoPlaceholder").classList.add("hidden");
+          document.getElementById("postPhotoPreviewWrap").classList.remove("hidden");
+          document.getElementById("postPhotoPreviewWrap").classList.add("flex");
+        };
+        img.onerror = function () {
+          showToast("Şəkli oxumaq mümkün olmadı, başqa şəkil seçin!");
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateDeliveryLabel() {
+      const checked = document.getElementById("postDeliveryInput").checked;
+      const lbl = document.getElementById("deliveryToggleText");
+      lbl.textContent = checked ? "Çatdırılma var" : "Çatdırılma yoxdur";
+      lbl.className = checked ? "text-xs font-semibold text-emerald-400" : "text-xs font-semibold text-slate-400";
+    }
+
+    function submitNewListing() {
+      if (!state.user) {
+        openAuthModal("post");
+        return;
+      }
+
+      if (!state.uploadedPhotoDataUrl) {
+        showToast("Zəhmət olmasa elan üçün şəkil seçin!");
+        return;
+      }
+
+      const title = document.getElementById("postTitleInput").value.trim();
+      const price = Number(document.getElementById("postPriceInput").value);
+      const category = document.getElementById("postCategoryInput").value;
+      const condition = document.getElementById("postConditionInput").value;
+      const delivery = document.getElementById("postDeliveryInput").checked;
+      const description = document.getElementById("postDescInput").value.trim();
+
+      if (title.length < 3) {
+        showToast("Məhsulun adını düzgün daxil edin");
+        return;
+      }
+      if (!price || price <= 0) {
+        showToast("Qiyməti (₼) daxil edin");
+        return;
+      }
+      if (!description) {
+        showToast("Ətraflı məlumat yazın");
+        return;
+      }
+
+      const newListing = {
+        id: "item-" + Date.now(),
+        title,
+        price,
+        category,
+        condition,
+        delivery,
+        description,
+        image: state.uploadedPhotoDataUrl,
+        ownerPhone: state.user.phone,
+        ownerId: state.user.userId
+      };
+
+      state.listings = [newListing, ...state.listings];
+      try {
+        saveListings();
+      } catch (err) {
+        state.listings.shift();
+        showToast("Yaddaş doludur, bəzi köhnə elanları silin");
+        return;
+      }
+      state.uploadedPhotoDataUrl = "";
+      closeModal("postModal");
+      renderMarketplace();
+      renderCabinet();
+      showToast("Elanınız dərc olundu");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      syncUserUI();
+      renderCategories();
+      renderMarketplace();
+      renderCabinet();
+    });
+  </script>
+</body>
+</html>
